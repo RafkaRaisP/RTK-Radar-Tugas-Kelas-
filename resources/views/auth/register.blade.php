@@ -106,7 +106,7 @@
     </div>
 
     {{-- Sisi kanan: form pendaftaran --}}
-        <div class="w-full lg:w-[45%] flex items-center justify-center px-6 py-8 sm:py-12 relative">
+        <div class="w-full lg:w-[45%] flex items-center justify-center px-6 pt-20 pb-8 sm:pt-24 sm:pb-12 relative">
         {{-- Mobile header --}}
         <div class="lg:hidden absolute top-8 left-6 right-6 anim-in" style="animation-delay: 100ms">
             <p class="font-mono text-[10px] text-emerald-400/70 tracking-widest uppercase mb-1">Deadline Tracker</p>

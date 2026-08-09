@@ -61,7 +61,7 @@ class AuthController extends Controller
             return back()->withErrors(['class_name' => 'Nama kelas tidak cocok dengan akun ini.']);
         }
 
-        Auth::login($user);
+        Auth::login($user, $request->filled('remember'));
 
         return redirect()->route('dashboard');
     }

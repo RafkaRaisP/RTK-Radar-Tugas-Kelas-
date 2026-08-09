@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
 
 class Task extends Model
 {
@@ -21,12 +23,14 @@ class Task extends Model
         'description',
     ];
 
-    // Konversi otomatis: deadline dibaca sebagai objek Carbon (tanggal)
-    protected function casts(): array
+    // Konversi otomatis: deadline disimpan sebagai instan UTC mutlak.
+    // Input ber-offset (mis. 12:27+07:00) → disimpan 05:27; dibaca kembali sebagai UTC.
+    protected function deadline(): Attribute
     {
-        return [
-            'deadline' => 'datetime',
-        ];
+        return Attribute::make(
+            get: fn (string $value) => Carbon::parse($value),
+            set: fn ($value) => Carbon::parse($value)->utc(),
+        );
     }
 
     // Relasi: tugas ini dibuat oleh satu user (pembuat)

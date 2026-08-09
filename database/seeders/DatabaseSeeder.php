@@ -10,12 +10,19 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
+        User::updateOrCreate(['username' => 'ketua_rpl1'], [
             'name' => 'Ketua Kelas XI RPL 1',
-            'username' => 'ketua_rpl1',
             'email' => 'ketua_rpl1@example.com',
             'password' => Hash::make('password123'),
             'role' => 'ketua_kelas',
+            'class_name' => 'XI RPL 1',
+        ]);
+
+        User::updateOrCreate(['username' => 'admin'], [
+            'name' => 'Administrator',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('admin123'),
+            'role' => 'admin',
             'class_name' => 'XI RPL 1',
         ]);
     }

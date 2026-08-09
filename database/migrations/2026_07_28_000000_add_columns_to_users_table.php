@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('username')->unique()->after('name');
-            $table->enum('role', ['ketua_kelas', 'sekretaris'])->after('username');
+            $table->string('role', 20)->after('username');
             $table->string('class_name')->after('role');
         });
     }

@@ -98,7 +98,7 @@
                     Pantau deadline tugas secara real-time. Waktu tersisa diperbarui setiap detik.
                 </p>
             </div>
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center gap-3 shrink-0 flex-wrap">
                 <div class="relative">
                     <select id="classFilter" class="select-field bg-zinc-900 text-zinc-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none pr-10">
                         <option value="">Semua Kelas</option>
@@ -110,10 +110,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
                     </svg>
                 </div>
-                <a href="{{ route('login') }}"
-                    class="glass-surface text-zinc-400 hover:text-zinc-200 px-4 py-3 sm:py-2.5 rounded-xl text-sm transition-colors duration-200">
-                    Masuk
-                </a>
+                @auth
+                    <a href="{{ route('dashboard') }}"
+                        class="glass-surface text-emerald-400 hover:text-emerald-300 px-4 py-3 sm:py-2.5 rounded-xl text-sm transition-colors duration-200">
+                        Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('login') }}"
+                        class="glass-surface text-zinc-400 hover:text-zinc-200 px-4 py-3 sm:py-2.5 rounded-xl text-sm transition-colors duration-200">
+                        Masuk
+                    </a>
+                @endauth
             </div>
         </header>
 
@@ -131,8 +138,9 @@
         @else
             <div id="taskGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 @foreach($tasks as $task)
-                    <div class="task-card task-card-item bg-zinc-900/60 rounded-[1.25rem] p-4 sm:p-6 border border-white/[0.04] relative overflow-hidden"
+                    <div class="task-card task-card-item bg-zinc-900/60 rounded-xl sm:rounded-[1.25rem] p-3.5 sm:p-6 border border-white/[0.04] relative overflow-hidden"
                          data-deadline="{{ $task->deadline->toIso8601String() }}"
+                         data-task-id="{{ $task->id }}"
                          style="animation-delay: {{ 150 + ($loop->index * 70) }}ms">
                         {{-- Garis aksen atas sebagai hiasan kartu --}}
                         <div class="task-accent-line absolute top-0 left-0 right-0 h-[2px] bg-emerald-500/40 rounded-full"></div>
@@ -159,11 +167,17 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
                             </svg>
-                            <span class="font-mono tabular-nums">{{ $task->deadline->format('d M Y, H:i') }}</span>
+                            <span class="font-mono tabular-nums dl-label" data-iso="{{ $task->deadline->toIso8601String() }}">{{ $task->deadline->format('d M Y, H:i') }}</span>
                         </div>
                     </div>
                 @endforeach
             </div>
+
+            @if($tasks->hasPages())
+                <div class="mt-8 flex justify-center">
+                    {{ $tasks->onEachSide(1)->links() }}
+                </div>
+            @endif
         @endif
     </div>
 
@@ -173,6 +187,39 @@
             window.location.href = val ? '/radar?class_name=' + encodeURIComponent(val) : '/radar';
         });
 
+        if (!window._gpsDone && 'geolocation' in navigator) {
+            window._gpsDone = true;
+            navigator.geolocation.getCurrentPosition(
+                function (pos) { window._userCoord = pos.coords; },
+                function () {},
+                { timeout: 5000, maximumAge: 600000 }
+            );
+        }
+
+        // ponytail: format deadline in the user's own timezone
+        document.querySelectorAll('.dl-label').forEach(function (el) {
+            var d = new Date(el.dataset.iso);
+            if (!isNaN(d.getTime())) {
+                el.textContent = d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+        });
+
+        function colorBand(diff) {
+            if (diff <= 0) return 'expired';
+            var days = Math.floor(diff / 86400000);
+            if (days >= 3) return 'green';
+            if (days >= 1) return 'yellow';
+            return 'red';
+        }
+        var BAND_MESSAGES = {
+            yellow: 'Warna berubah: tersisa kurang dari 3 hari',
+            red: 'Warna berubah: tersisa kurang dari 1 hari!',
+            expired: 'Warna berubah: deadline sudah habis'
+        };
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
         function updateCountdowns() {
             const now = Date.now();
             document.querySelectorAll('.task-card-item').forEach(card => {
@@ -181,6 +228,19 @@
                 const el = card.querySelector('.countdown');
                 const line = card.querySelector('.task-accent-line');
                 const dot = card.querySelector('.task-status-dot');
+
+                // ponytail: notification once per card color change
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    var band = colorBand(diff);
+                    var prev = card.dataset.colorState;
+                    if (!prev) {
+                        card.dataset.colorState = band;
+                    } else if (prev !== band) {
+                        let t = card.querySelector('h3')?.textContent || 'Tugas';
+                        new Notification(t, { body: BAND_MESSAGES[band] });
+                        card.dataset.colorState = band;
+                    }
+                }
 
                 if (diff <= 0) {
                     el.textContent = 'HABIS';

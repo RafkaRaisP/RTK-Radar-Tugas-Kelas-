@@ -106,7 +106,7 @@
     </div>
 
     {{-- Sisi kanan: form login --}}
-        <div class="w-full lg:w-[45%] flex items-center justify-center px-6 py-8 sm:py-12 relative">
+        <div class="w-full lg:w-[45%] flex items-center justify-center px-6 pt-20 pb-8 sm:pt-24 sm:pb-12 relative">
         {{-- Mobile header --}}
         <div class="lg:hidden absolute top-8 left-6 right-6 anim-in" style="animation-delay: 100ms">
             <p class="font-mono text-[10px] text-emerald-400/70 tracking-widest uppercase mb-1">Deadline Tracker</p>
@@ -152,6 +152,14 @@
                     @error('class_name')
                         <p class="text-red-400/90 text-xs mt-1.5">{{ $message }}</p>
                     @enderror
+                </div>
+
+                <div class="anim-in" style="animation-delay: 420ms">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="remember" id="remember"
+                            class="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-emerald-500 focus:ring-emerald-500/20">
+                        <span class="text-xs text-zinc-400 select-none">Ingat Saya</span>
+                    </label>
                 </div>
 
                 <div class="pt-1 anim-in" style="animation-delay: 460ms">
