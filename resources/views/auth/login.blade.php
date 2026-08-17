@@ -95,7 +95,10 @@
             <div class="mesh-blob-2 absolute bottom-1/3 right-1/4 w-[400px] h-[400px] rounded-full bg-emerald-400/5"></div>
         </div>
         <div class="relative z-10 anim-in" style="animation-delay: 200ms">
-            <p class="font-mono text-xs text-emerald-400/70 tracking-widest uppercase mb-4">Deadline Tracker</p>
+            <a href="{{ route('radar') }}" class="inline-flex items-center gap-2.5 mb-4">
+                <img src="{{ asset('images/logo.png') }}" alt="Radar Tugas Kelas" class="w-9 h-9 object-contain shrink-0" style="filter:hue-rotate(158deg)">
+                <span class="font-mono text-[11px] uppercase tracking-widest text-zinc-400">Radar Tugas Kelas</span>
+            </a>
             <h1 class="font-display text-5xl xl:text-6xl font-bold tracking-tight leading-[0.95] mb-6">
                 Radar<br>Tugas<br>Kelas
             </h1>
@@ -109,8 +112,11 @@
         <div class="w-full lg:w-[45%] flex items-center justify-center px-6 pt-20 pb-8 sm:pt-24 sm:pb-12 relative">
         {{-- Mobile header --}}
         <div class="lg:hidden absolute top-8 left-6 right-6 anim-in" style="animation-delay: 100ms">
-            <p class="font-mono text-[10px] text-emerald-400/70 tracking-widest uppercase mb-1">Deadline Tracker</p>
-            <p class="font-display text-lg font-bold tracking-tight">Radar Tugas Kelas</p>
+            <a href="{{ route('radar') }}" class="inline-flex items-center gap-2 mb-1">
+                <img src="{{ asset('images/logo.png') }}" alt="Radar Tugas Kelas" class="w-6 h-6 object-contain shrink-0" style="filter:hue-rotate(158deg)">
+                <span class="font-display text-lg font-bold tracking-tight">Radar Tugas Kelas</span>
+            </a>
+            <p class="font-mono text-[10px] text-emerald-400/70 tracking-widest uppercase">Deadline Tracker</p>
         </div>
 
         <div class="w-full max-w-[380px]">
