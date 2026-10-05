@@ -1,35 +1,32 @@
 @if ($paginator->hasPages())
-    <nav role="navigation" aria-label="Pagination" class="flex items-center justify-center gap-1">
-        {{-- Previous Page Link --}}
+    <nav role="navigation" aria-label="Pagination" class="flex flex-wrap items-center justify-center gap-1.5">
         @if ($paginator->onFirstPage())
-            <span class="flex items-center justify-center w-11 h-11 border-2 border-hitam-pekat dark:border-merah-elegan font-mono text-xs text-zinc-400 cursor-default">
+            <span aria-disabled="true" aria-label="Sebelumnya"
+                class="flex h-11 min-w-11 cursor-default items-center justify-center rounded-sm border border-stone-300 bg-[#eee5d6] px-3 font-mono text-xs text-stone-400 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-600">
                 &larr;
             </span>
         @else
-            <a href="{{ $paginator->previousPageUrl() }}" rel="prev"
-                class="flex items-center justify-center w-11 h-11 border-2 border-hitam-pekat dark:border-merah-elegan font-mono text-xs hover:bg-merah-elegan hover:border-merah-elegan hover:text-putih-kertas transition-colors"
-                aria-label="Sebelumnya">
+            <a href="{{ $paginator->previousPageUrl() }}" rel="prev" aria-label="Sebelumnya"
+                class="flex h-11 min-w-11 items-center justify-center rounded-sm border border-stone-300 bg-[#fffdf7] px-3 font-mono text-xs font-bold text-stone-600 transition-colors hover:border-[#be1836] hover:bg-[#be1836] hover:text-white dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-rose-500 dark:hover:bg-rose-600 dark:hover:text-white">
                 &larr;
             </a>
         @endif
 
-        {{-- Pagination Elements --}}
         @foreach ($elements as $element)
             @if (is_string($element))
-                <span class="flex items-center justify-center w-11 h-11 border-2 border-hitam-pekat dark:border-merah-elegan font-mono text-xs text-zinc-400 cursor-default">{{ $element }}</span>
+                <span aria-hidden="true" class="flex h-11 min-w-8 items-center justify-center font-mono text-xs text-stone-400 dark:text-zinc-600">{{ $element }}</span>
             @endif
 
             @if (is_array($element))
                 @foreach ($element as $page => $url)
                     @if ($page == $paginator->currentPage())
-                        <span aria-current="page"
-                            class="flex items-center justify-center w-11 h-11 border-2 border-hitam-pekat dark:border-merah-elegan bg-merah-elegan text-putih-kertas font-mono text-xs cursor-default">
+                        <span aria-current="page" aria-label="Halaman {{ $page }}"
+                            class="flex h-11 min-w-11 cursor-default items-center justify-center rounded-sm border border-[#760b20] bg-[#be1836] px-3 font-mono text-xs font-bold text-white shadow-[0_3px_0_#760b20]">
                             {{ $page }}
                         </span>
                     @else
-                        <a href="{{ $url }}"
-                            class="flex items-center justify-center w-11 h-11 border-2 border-hitam-pekat dark:border-merah-elegan font-mono text-xs hover:bg-hitam-pekat dark:hover:bg-merah-elegan hover:text-putih-kertas transition-colors"
-                            aria-label="Halaman {{ $page }}">
+                        <a href="{{ $url }}" aria-label="Halaman {{ $page }}"
+                            class="flex h-11 min-w-11 items-center justify-center rounded-sm border border-stone-300 bg-[#fffdf7] px-3 font-mono text-xs font-bold text-stone-600 transition-colors hover:border-[#be1836] hover:text-[#be1836] dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-rose-400 dark:hover:text-rose-400">
                             {{ $page }}
                         </a>
                     @endif
@@ -37,15 +34,14 @@
             @endif
         @endforeach
 
-        {{-- Next Page Link --}}
         @if ($paginator->hasMorePages())
-            <a href="{{ $paginator->nextPageUrl() }}" rel="next"
-                class="flex items-center justify-center w-11 h-11 border-2 border-hitam-pekat dark:border-merah-elegan font-mono text-xs hover:bg-merah-elegan hover:border-merah-elegan hover:text-putih-kertas transition-colors"
-                aria-label="Berikutnya">
+            <a href="{{ $paginator->nextPageUrl() }}" rel="next" aria-label="Berikutnya"
+                class="flex h-11 min-w-11 items-center justify-center rounded-sm border border-stone-300 bg-[#fffdf7] px-3 font-mono text-xs font-bold text-stone-600 transition-colors hover:border-[#be1836] hover:bg-[#be1836] hover:text-white dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-rose-500 dark:hover:bg-rose-600 dark:hover:text-white">
                 &rarr;
             </a>
         @else
-            <span class="flex items-center justify-center w-11 h-11 border-2 border-hitam-pekat dark:border-merah-elegan font-mono text-xs text-zinc-400 cursor-default">
+            <span aria-disabled="true" aria-label="Berikutnya"
+                class="flex h-11 min-w-11 cursor-default items-center justify-center rounded-sm border border-stone-300 bg-[#eee5d6] px-3 font-mono text-xs text-stone-400 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-600">
                 &rarr;
             </span>
         @endif

@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
@@ -34,6 +36,9 @@ class User extends Authenticatable
         'password',
         'role',
         'class_name',
+        'academic_year_id',
+        'pj_subject',
+        'status',
     ];
 
     // Kolom yang disembunyikan saat data user dikirim ke frontend
@@ -57,11 +62,47 @@ class User extends Authenticatable
         return $this->hasMany(Task::class);
     }
 
+    // Relasi: user terdaftar di satu tahun ajaran
+    public function academicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
+
     // Relasi: satu user bisa menandai banyak tugas sebagai selesai (many-to-many)
     public function completedTasks(): BelongsToMany
     {
         return $this->belongsToMany(Task::class, 'task_user')
-            ->withPivot('created_at')
+            ->withPivot('created_at', 'status', 'confirmed_by')
             ->orderByPivot('created_at');
+    }
+
+    public function pjAssignments(): HasMany
+    {
+        return $this->hasMany(PjAssignment::class);
+    }
+
+    public function isPjMapel(): bool
+    {
+        return $this->role === 'pj_mapel';
+    }
+
+    public function isPjOf(string $subject): bool
+    {
+        return $this->isPjMapel() && $this->pj_subject === $subject;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->status === 'banned';
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspended';
+    }
+
+    public function proofPhotos(): HasMany
+    {
+        return $this->hasMany(ProofPhoto::class);
     }
 }

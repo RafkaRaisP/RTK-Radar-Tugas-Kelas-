@@ -14,6 +14,13 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                'putih-kertas': '#F9F9F9',
+                'merah-elegan': '#C8102E',
+                'hitam-pekat': '#0D0D0D',
+                'hijau-rimba': '#0B3B24',
+                'hijau-aksen': '#1B5E20',
+            },
         },
     },
     plugins: [],

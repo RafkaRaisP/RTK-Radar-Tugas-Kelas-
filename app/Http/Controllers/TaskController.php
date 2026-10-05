@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProofPhoto;
+use App\Models\Subject;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class TaskController extends Controller
@@ -48,34 +52,50 @@ class TaskController extends Controller
         }
 
         $tasks = $query->orderBy('deadline', 'asc')->paginate(50);
-        $completedIds = $user->completedTasks->pluck('id')->toArray();
 
-        $subjects = Task::select('subject')->distinct()->orderBy('subject')->pluck('subject');
+        $taskStatuses = [];
+        foreach ($user->completedTasks()->select('task_id', 'task_user.status')->get() as $ct) {
+            $taskStatuses[$ct->task_id] = $ct->pivot->status;
+        }
+
+        $subjects = Subject::orderBy('name')->pluck('name');
         $classOptions = User::CLASS_OPTIONS;
 
-        return view('dashboard', compact('tasks', 'completedIds', 'subjects', 'classOptions'));
+        return view('dashboard.agenda', compact('tasks', 'taskStatuses', 'subjects', 'classOptions'));
     }
 
     // Tambah tugas baru (hanya pengurus kelas & admin)
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if ($user->role === 'siswa') {
+            abort(403);
+        }
+
         $rules = [
             'title' => 'required|string|max:255',
-            'subject' => 'required|string|max:255',
-            'deadline' => 'required|date|after_or_equal:now',
+            'deadline' => 'required|date',
             'description' => 'nullable|string',
         ];
 
-        if (Auth::user()->role === 'admin') {
+        if ($user->role === 'admin') {
+            $rules['subject'] = ['required', Rule::exists('subjects', 'name')];
             $rules['class_name'] = ['required', Rule::in(User::CLASS_OPTIONS)];
+        } elseif ($user->isPjMapel()) {
+            // PJ Mapel: subject otomatis dari mapelnya, tidak perlu input
+        } else {
+            $rules['subject'] = ['required', Rule::exists('subjects', 'name')];
         }
 
         $validated = $request->validate($rules);
 
         Task::create([
             'user_id' => Auth::id(),
-            'class_name' => Auth::user()->role === 'admin' ? $validated['class_name'] : Auth::user()->class_name,
-            ...$validated,
+            'class_name' => $user->isPjMapel() ? $user->class_name : ($user->role === 'admin' ? $validated['class_name'] : $user->class_name),
+            'subject' => $user->isPjMapel() ? $user->pj_subject : $validated['subject'],
+            'title' => $validated['title'],
+            'deadline' => $validated['deadline'],
+            'description' => $validated['description'] ?? null,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Tugas berhasil ditambahkan.');
@@ -91,8 +111,8 @@ class TaskController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'subject' => 'required|string|max:255',
-            'deadline' => 'required|date|after_or_equal:now',
+            'subject' => ['required', Rule::exists('subjects', 'name')],
+            'deadline' => 'required|date',
             'description' => 'nullable|string',
         ]);
 
@@ -122,13 +142,119 @@ class TaskController extends Controller
             abort(403);
         }
 
-        if ($user->completedTasks()->where('task_id', $task->id)->exists()) {
+        $existing = $user->completedTasks()->where('task_id', $task->id)->first();
+
+        if ($existing) {
             $user->completedTasks()->detach($task);
         } else {
-            $user->completedTasks()->attach($task, ['created_at' => now()]);
+            $user->completedTasks()->attach($task, ['created_at' => now(), 'status' => 'pending']);
         }
 
         return redirect()->route('dashboard');
+    }
+
+    // Siswa menandai tugas selesai (submit ke verifikasi PJ)
+    public function markAsDone(Request $request, Task $task)
+    {
+        $user = Auth::user();
+        if (strtolower($task->class_name) !== strtolower($user->class_name)) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'photos' => 'required|array|min:1',
+            'photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $existing = $user->completedTasks()->where('task_id', $task->id)->first();
+
+        if ($existing) {
+            if ($existing->pivot->status === 'pending') {
+                return redirect()->route('dashboard')->with('info', 'Tugas sudah dalam antrian verifikasi.');
+            }
+            // Hapus foto lama sebelum upload baru
+            $oldPhotos = ProofPhoto::where('task_id', $task->id)->where('user_id', $user->id)->get();
+            foreach ($oldPhotos as $photo) {
+                Storage::disk('public')->delete($photo->photo_path);
+                $photo->delete();
+            }
+            $user->completedTasks()->updateExistingPivot($task->id, ['status' => 'pending', 'confirmed_by' => null]);
+        } else {
+            $user->completedTasks()->attach($task, ['created_at' => now(), 'status' => 'pending']);
+        }
+
+        // Simpan foto bukti
+        foreach ($request->file('photos') as $photo) {
+            $path = $photo->store('proof-photos/'.$task->id.'/'.$user->id, 'public');
+            ProofPhoto::create([
+                'task_id' => $task->id,
+                'user_id' => $user->id,
+                'photo_path' => $path,
+            ]);
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Tugas ditandai selesai. Menunggu verifikasi PJ Mapel.');
+    }
+
+    // Dashboard PJ Mapel: lihat tugas pending per mapel
+    public function pjDashboard(Request $request)
+    {
+        $user = Auth::user();
+
+        if (! $user->isPjMapel()) {
+            abort(403);
+        }
+
+        $tasks = Task::where('class_name', $user->class_name)
+            ->where('subject', $user->pj_subject)
+            ->whereHas('completedBy', fn ($q) => $q->where('task_user.status', 'pending'))
+            ->with([
+                'completedBy' => fn ($q) => $q->where('task_user.status', 'pending'),
+                'proofPhotos',
+            ])
+            ->orderBy('deadline', 'asc')
+            ->paginate(50);
+
+        $confirmedTasks = Task::where('class_name', $user->class_name)
+            ->where('subject', $user->pj_subject)
+            ->whereHas('completedBy', fn ($q) => $q->where('task_user.status', 'confirmed'))
+            ->with([
+                'completedBy' => fn ($q) => $q->where('task_user.status', 'confirmed'),
+                'proofPhotos',
+            ])
+            ->orderBy('deadline', 'desc')
+            ->paginate(20, ['*'], 'confirmed_page');
+
+        return view('pj.dashboard', compact('tasks', 'confirmedTasks'));
+    }
+
+    // PJ Mapel: konfirmasi tugas siswa
+    public function confirmTask(Task $task)
+    {
+        $user = Auth::user();
+
+        if (! $user->isPjMapel()) {
+            abort(403);
+        }
+
+        $pivotRow = DB::table('task_user')
+            ->where('task_id', $task->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if (! $pivotRow) {
+            return redirect()->route('pj.dashboard')->with('error', 'Tidak ada tugas pending untuk dikonfirmasi.');
+        }
+
+        DB::table('task_user')
+            ->where('task_id', $task->id)
+            ->where('user_id', $pivotRow->user_id)
+            ->update([
+                'status' => 'confirmed',
+                'confirmed_by' => $user->id,
+            ]);
+
+        return redirect()->route('pj.dashboard')->with('success', 'Tugas berhasil dikonfirmasi.');
     }
 
     // Export tugas ke CSV

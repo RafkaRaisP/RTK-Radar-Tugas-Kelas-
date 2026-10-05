@@ -1,3 +1,197 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+body { font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif; overscroll-behavior: none; }
+.font-display { font-family: 'Spectral', Georgia, serif; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ---- Latar buku agenda ---- */
+.notebook-bg {
+    background-color: #f5efe3;
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(71, 112, 145, .085) 31px, rgba(71, 112, 145, .085) 32px);
+}
+.dark .notebook-bg {
+    background-color: #111113;
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(148, 163, 184, .055) 31px, rgba(148, 163, 184, .055) 32px);
+}
+.notebook-page {
+    background-color: #fbf7ed;
+    background-image:
+        linear-gradient(90deg, transparent 0, transparent 55px, rgba(190, 24, 50, 0.2) 55px, rgba(190, 24, 50, 0.2) 57px, transparent 57px),
+        repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(71, 112, 145, 0.13) 31px, rgba(71, 112, 145, 0.13) 32px);
+}
+.dark .notebook-page {
+    background-color: #171719;
+    background-image:
+        linear-gradient(90deg, transparent 0, transparent 55px, rgba(248, 113, 113, 0.17) 55px, rgba(248, 113, 113, 0.17) 57px, transparent 57px),
+        repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(148, 163, 184, 0.08) 31px, rgba(148, 163, 184, 0.08) 32px);
+}
+
+/* ---- Sampul buku ---- */
+.book-cover {
+    background-color: #a30f2b;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.08) 0 1px, transparent 1px),
+        linear-gradient(135deg, rgba(0,0,0,.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.1) 75%);
+    background-size: 5px 5px, 28px 28px;
+    box-shadow: inset -10px 0 18px rgba(55,0,9,.22), 8px 0 30px rgba(55,0,9,.1);
+}
+.dark .book-cover { background-color: #18181b; box-shadow: inset -5px 0 0 #be1836, 8px 0 30px rgba(0,0,0,.28); }
+.cover-bar {
+    background-color: #a30f2b;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.08) 0 1px, transparent 1px),
+        linear-gradient(135deg, rgba(0,0,0,.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.1) 75%);
+    background-size: 5px 5px, 28px 28px;
+}
+
+/* ---- Lembaran kertas ---- */
+.paper-sheet {
+    position: relative;
+    background: rgba(255, 253, 247, .96);
+    border: 1px solid rgba(67,57,48,.16);
+    box-shadow: 5px 6px 0 rgba(71,55,39,.07), 0 18px 45px -34px rgba(48,37,26,.6);
+}
+.dark .paper-sheet {
+    background: rgba(31,31,34,.97);
+    border-color: rgba(255,255,255,.1);
+    box-shadow: 5px 6px 0 rgba(0,0,0,.25), 0 18px 45px -34px rgba(0,0,0,.9);
+}
+.paper-card {
+    position: relative;
+    background: rgba(255, 253, 247, 0.94);
+    border: 1px solid rgba(54, 46, 39, 0.16);
+    box-shadow: 8px 10px 0 rgba(46, 38, 31, 0.08), 0 24px 60px -35px rgba(46, 38, 31, 0.45);
+}
+.dark .paper-card {
+    background: rgba(32, 32, 35, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.25), 0 24px 60px -35px rgba(0, 0, 0, 0.8);
+}
+.paper-card::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 92px;
+    height: 24px;
+    transform: translateX(-50%) rotate(-1.5deg);
+    background: rgba(221, 205, 166, 0.72);
+    border-left: 1px solid rgba(90, 72, 38, 0.1);
+    border-right: 1px solid rgba(90, 72, 38, 0.1);
+}
+.dark .paper-card::before { background: rgba(106, 91, 64, 0.72); }
+.index-card {
+    position: relative;
+    background: rgba(255,253,247,.95);
+    border: 1px solid rgba(67,57,48,.17);
+    box-shadow: 3px 4px 0 rgba(71,55,39,.07);
+}
+.dark .index-card { background: rgba(31,31,34,.97); border-color: rgba(255,255,255,.1); box-shadow: 3px 4px 0 rgba(0,0,0,.25); }
+.index-card::after { content: ''; position: absolute; left: 0; right: 0; bottom: 11px; height: 1px; background: rgba(71,112,145,.12); }
+
+/* ---- Form ---- */
+.field {
+    background: rgba(255, 253, 247, .92);
+    border: 1px solid rgba(67,57,48,.2);
+    border-bottom: 2px solid rgba(67,57,48,.38);
+    color: #292524;
+    transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+.dark .field { background: #242427; border-color: rgba(255,255,255,.12); border-bottom-color: rgba(255,255,255,.26); color: #fafafa; }
+.field:focus { outline: none; border-color: #be1836; box-shadow: 0 0 0 3px rgba(190,24,54,.12); background: #fff; }
+.dark .field:focus { background: #29292c; border-color: #fb7185; }
+.select-field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23716b64' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+}
+
+/* ---- Tombol stempel ---- */
+.pressable { transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease; }
+.pressable:active { transform: translateY(2px); }
+.primary-button { box-shadow: 0 4px 0 #760b20; }
+.primary-button:hover { transform: translateY(-1px); box-shadow: 0 5px 0 #760b20; }
+.primary-button:active { transform: translateY(3px); box-shadow: 0 1px 0 #760b20; }
+.stamp-button { box-shadow: 0 4px 0 #760b20; }
+.stamp-button:hover { transform: translateY(-1px); box-shadow: 0 5px 0 #760b20; }
+.stamp-button:active { transform: translateY(3px); box-shadow: 0 1px 0 #760b20; }
+
+/* ---- Kartu tugas + semaphore deadline ---- */
+.task-card { transition: transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s ease, border-color .22s ease; }
+.task-card:hover { transform: translateY(-3px) rotate(-.15deg); box-shadow: 7px 9px 0 rgba(71,55,39,.09), 0 22px 48px -32px rgba(48,37,26,.7); }
+.dark .task-card:hover { box-shadow: 7px 9px 0 rgba(0,0,0,.3), 0 22px 48px -32px rgba(0,0,0,.95); }
+.task-card:nth-child(even):hover { transform: translateY(-3px) rotate(.15deg); }
+
+.task-card-item { --urgency: #10b981; --urgency-soft: rgba(16, 185, 129, .12); }
+.task-card-item[data-urgency="yellow"] { --urgency: #d97706; --urgency-soft: rgba(245, 158, 11, .13); }
+.task-card-item[data-urgency="red"] { --urgency: #dc2626; --urgency-soft: rgba(239, 68, 68, .12); }
+.task-card-item[data-urgency="expired"] { --urgency: #78716c; --urgency-soft: rgba(120, 113, 108, .09); opacity: .72; }
+.task-card-item[data-completed="1"] { opacity: .72; }
+.task-card-item { border-top: 4px solid var(--urgency); }
+.task-card-item .status-dot { background: var(--urgency); box-shadow: 0 0 0 4px var(--urgency-soft); }
+.task-card-item .cd-count { color: var(--urgency); }
+.task-card-item .urgency-stamp { color: var(--urgency); border-color: var(--urgency); background: var(--urgency-soft); }
+
+.task-card-item .task-sheet { border-left: 4px solid var(--urgency); transition: transform .2s ease, box-shadow .2s ease; }
+.task-card-item .task-sheet:hover { transform: translateX(2px); box-shadow: 7px 8px 0 rgba(71,55,39,.08); }
+.dark .task-card-item .task-sheet:hover { box-shadow: 7px 8px 0 rgba(0,0,0,.28); }
+.task-card-item .timeline-dot { background: var(--urgency); box-shadow: 0 0 0 4px var(--urgency-soft), 0 0 0 7px #f5efe3; }
+.dark .task-card-item .timeline-dot { box-shadow: 0 0 0 4px var(--urgency-soft), 0 0 0 7px #111113; }
+.task-card-item .tl-count { color: var(--urgency); border-color: var(--urgency); background: var(--urgency-soft); }
+
+/* ---- Modal ---- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    overflow-y: auto;
+    background: rgba(28, 20, 16, .64);
+    backdrop-filter: blur(5px);
+}
+.modal-overlay.is-open { display: flex; align-items: flex-start; justify-content: center; }
+.modal-panel { margin-block: auto; animation: pageIn .28s cubic-bezier(.16,1,.3,1) both; }
+.edit-panel { display: none; }
+.edit-panel.is-open { display: block; animation: pageIn .25s cubic-bezier(.16,1,.3,1) both; }
+
+/* ---- Transisi tema ---- */
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: themeReveal 700ms cubic-bezier(.65,0,.35,1); }
+@keyframes themeReveal {
+    from { clip-path: circle(2px at var(--rtk-x) var(--rtk-y)); }
+    to { clip-path: circle(var(--rtk-maxr) at var(--rtk-x) var(--rtk-y)); }
+}
+@keyframes pageIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.anim-in { animation: pageIn .5s cubic-bezier(.16,1,.3,1) both; }
+.page-in { animation: pageIn .55s cubic-bezier(.16,1,.3,1) both; }
+.flash-msg { animation: slideDown .35s cubic-bezier(.16,1,.3,1) both; }
+
+/* ---- Aksesibilitas: indikator fokus konsisten ---- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid #be1836;
+    outline-offset: 2px;
+}
+.dark a:focus-visible,
+.dark button:focus-visible,
+.dark input:focus-visible,
+.dark select:focus-visible,
+.dark textarea:focus-visible,
+.dark [tabindex]:focus-visible {
+    outline-color: #fb7185;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

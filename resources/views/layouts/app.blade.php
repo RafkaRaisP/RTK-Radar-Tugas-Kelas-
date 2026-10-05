@@ -3,26 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Radar Tugas Kelas — pantau deadline tugas sekolah secara real-time.">
+    <meta name="description" content="@yield('meta-description', 'Radar Tugas Kelas — pantau deadline tugas sekolah secara real-time.')">
     <title>@yield('title', 'Radar Tugas Kelas')</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        'putih-kertas': '#F9F9F9',
-                        'merah-elegan': '#C8102E',
-                        'hitam-pekat': '#0D0D0D',
-                        'hijau-rimba': '#0B3B24',
-                        'hijau-aksen': '#1B5E20',
-                    },
-                },
-            },
-        };
-    </script>
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/logo.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,70 +21,11 @@
         })();
     </script>
 
-    <style>
-        *, *::before, *::after { box-sizing: border-box; }
-        html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
-        body { font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif; overscroll-behavior: none; }
-        .font-display { font-family: 'Spectral', Georgia, serif; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-    </style>
-
-    @stack('styles')
+    @vite(['resources/css/app.css'])
 </head>
-<body class="min-h-[100dvh] flex flex-col bg-putih-kertas dark:bg-hitam-pekat text-hitam-pekat dark:text-putih-kertas">
+<body class="min-h-[100dvh] text-stone-900 dark:text-zinc-100 @yield('bodyClass')">
+    @yield('body')
 
-    {{-- Navbar --}}
-    <header class="border-b-4 border-hitam-pekat dark:border-hijau-aksen">
-        <div class="max-w-7xl mx-auto px-5 sm:px-8">
-            <div class="flex items-center justify-between py-5 gap-4">
-                <a href="{{ route('radar') }}" class="flex items-center gap-3">
-                    <img src="{{ asset('images/logo.png') }}" alt="Radar Tugas Kelas" class="w-9 h-9 sm:w-10 sm:h-10 object-contain shrink-0" style="filter:hue-rotate(158deg)">
-                    <span class="font-display text-lg sm:text-2xl font-bold uppercase tracking-tight">Radar Tugas Kelas</span>
-                </a>
-                <nav class="flex items-center gap-4 sm:gap-8">
-                    <a href="{{ route('radar') }}"
-                        class="font-mono text-[10px] sm:text-xs uppercase tracking-widest transition-colors {{ request()->routeIs('radar') ? 'text-merah-elegan border-b-2 border-merah-elegan pb-0.5' : 'hover:text-merah-elegan' }}">
-                        Radar
-                    </a>
-                    @auth
-                        <a href="{{ route('dashboard') }}"
-                            class="font-mono text-[10px] sm:text-xs uppercase tracking-widest transition-colors {{ request()->routeIs('dashboard') ? 'text-merah-elegan border-b-2 border-merah-elegan pb-0.5' : 'hover:text-merah-elegan' }}">
-                            Dashboard
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}"
-                            class="font-mono text-[10px] sm:text-xs uppercase tracking-widest transition-colors {{ request()->routeIs('login') ? 'text-merah-elegan border-b-2 border-merah-elegan pb-0.5' : 'hover:text-merah-elegan' }}">
-                            Masuk
-                        </a>
-                    @endauth
-                    <button id="theme-toggle" aria-label="Ganti tema" title="Ganti tema"
-                        class="w-10 h-10 sm:w-11 sm:h-11 border-2 border-hitam-pekat dark:border-hijau-aksen flex items-center justify-center hover:bg-merah-elegan hover:border-merah-elegan hover:text-putih-kertas transition-colors">
-                        <svg id="icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/>
-                        </svg>
-                        <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>
-                        </svg>
-                    </button>
-                </nav>
-            </div>
-        </div>
-    </header>
-
-    {{-- Konten halaman --}}
-    <main class="flex-1">
-        @yield('content')
-    </main>
-
-    {{-- Footer --}}
-    <footer class="border-t-4 border-hitam-pekat dark:border-hijau-aksen">
-        <div class="max-w-7xl mx-auto px-5 sm:px-8 py-8 flex items-center justify-between">
-            <span class="font-mono text-[10px] uppercase tracking-widest text-zinc-500">Radar Tugas Kelas</span>
-            <span class="font-mono text-[10px] uppercase tracking-widest text-zinc-500">{{ date('Y') }}</span>
-        </div>
-    </footer>
-
-    {{-- Toggle dark/light mode --}}
     <script>
         (function () {
             var html = document.documentElement;
@@ -115,18 +39,92 @@
                 if (sun) sun.classList.toggle('hidden', !isDark);
             }
 
-            if (btn) {
-                btn.addEventListener('click', function () {
-                    var isDark = !html.classList.contains('dark');
+            function transitionTheme(x, y, isDark) {
+                function commit() {
                     apply(isDark);
                     try { localStorage.setItem('rtk-theme', isDark ? 'dark' : 'light'); } catch (e) {}
-                });
+                }
+                if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { commit(); return; }
+                var maxR = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+                var rs = document.documentElement.style;
+                rs.setProperty('--rtk-x', x + 'px');
+                rs.setProperty('--rtk-y', y + 'px');
+                rs.setProperty('--rtk-maxr', maxR + 'px');
+                document.startViewTransition(commit);
             }
 
+            if (btn) btn.addEventListener('click', function (e) { transitionTheme(e.clientX, e.clientY, !html.classList.contains('dark')); });
             apply(html.classList.contains('dark'));
         })();
+
+        // Format label tanggal lokal (id-ID); dipakai halaman radar & dashboard
+        document.querySelectorAll('.dl-label').forEach(function (el) {
+            var d = new Date(el.dataset.iso);
+            if (!isNaN(d.getTime())) {
+                el.textContent = d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+        });
+
+        // Countdown live + semaphore warna + notifikasi perubahan status
+        function colorBand(diff) {
+            if (diff <= 0) return 'expired';
+            var days = Math.floor(diff / 86400000);
+            if (days >= 3) return 'green';
+            if (days >= 1) return 'yellow';
+            return 'red';
+        }
+        var BAND_MESSAGES = {
+            yellow: 'Warna berubah: tersisa kurang dari 3 hari',
+            red: 'Warna berubah: tersisa kurang dari 1 hari!',
+            expired: 'Warna berubah: deadline sudah habis'
+        };
+        if (document.querySelector('.task-card-item') && 'Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        function updateCountdowns() {
+            const now = Date.now();
+            document.querySelectorAll('.task-card-item').forEach(card => {
+                if (card.dataset.completed === '1') return;
+                const deadline = new Date(card.dataset.deadline).getTime();
+                const diff = deadline - now;
+                const el = card.querySelector('.cd-count, .tl-count');
+                const band = colorBand(diff);
+
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    var prev = card.dataset.colorState;
+                    if (!prev) {
+                        card.dataset.colorState = band;
+                    } else if (prev !== band) {
+                        let t = card.querySelector('h3, h2')?.textContent || 'Tugas';
+                        new Notification(t, { body: BAND_MESSAGES[band] });
+                        card.dataset.colorState = band;
+                    }
+                }
+
+                card.dataset.urgency = band;
+                if (!el) return;
+                if (diff <= 0) { el.textContent = 'HABIS'; return; }
+
+                const days = Math.floor(diff / 86400000);
+                const hours = Math.floor((diff % 86400000) / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                el.textContent = days > 0 ? days + 'h ' + hours + 'j ' + minutes + 'm' : hours + 'j ' + minutes + 'm ' + seconds + 'd';
+            });
+        }
+
+        if (document.querySelector('.task-card-item')) {
+            document.querySelectorAll('.task-card-item').forEach((card, i) => {
+                card.style.opacity = '0';
+                card.style.animation = 'pageIn .45s cubic-bezier(.16, 1, .3, 1) forwards';
+                card.style.animationDelay = (120 + Math.min(i, 8) * 55) + 'ms';
+            });
+            updateCountdowns();
+            setInterval(updateCountdowns, 1000);
+        }
     </script>
 
-    @stack('scripts')
+    @yield('scripts')
 </body>
 </html>

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class Task extends Model
@@ -21,6 +22,7 @@ class Task extends Model
         'subject',
         'deadline',
         'description',
+        'academic_year_id',
     ];
 
     // Konversi otomatis: deadline disimpan sebagai instan UTC mutlak.
@@ -39,10 +41,30 @@ class Task extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function academicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
+
     // Relasi: tugas ini bisa ditandai selesai oleh banyak user (many-to-many)
     public function completedBy(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'task_user')
-            ->withPivot('created_at');
+            ->withPivot('created_at', 'status', 'confirmed_by');
+    }
+
+    public function isPendingFor(User $user): bool
+    {
+        return $this->completedBy()->where('user_id', $user->id)->where('task_user.status', 'pending')->exists();
+    }
+
+    public function isConfirmedFor(User $user): bool
+    {
+        return $this->completedBy()->where('user_id', $user->id)->where('task_user.status', 'confirmed')->exists();
+    }
+
+    public function proofPhotos(): HasMany
+    {
+        return $this->hasMany(ProofPhoto::class);
     }
 }
