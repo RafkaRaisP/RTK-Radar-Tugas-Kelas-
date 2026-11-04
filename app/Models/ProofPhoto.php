@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class ProofPhoto extends Model
 {
@@ -22,6 +21,7 @@ class ProofPhoto extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->photo_path);
+        // asset() ikut host request sekarang — tidak nempel APP_URL
+        return asset('storage/'.$this->photo_path);
     }
 }

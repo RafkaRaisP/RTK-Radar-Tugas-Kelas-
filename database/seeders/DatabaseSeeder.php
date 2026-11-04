@@ -3,15 +3,26 @@
 namespace Database\Seeders;
 
 use App\Models\AcademicYear;
+use App\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $yearId = AcademicYear::currentId();
+        $this->call([
+            AcademicYearSeeder::class,
+            StudentSeeder::class,
+        ]);
+
+        // Tahun ajaran angkatan kelas XI (2025/2026) — semua akun demo di bawah berbasis kelas XI
+        $yearXI = AcademicYear::where('name', '2025/2026')->value('id');
+
+        // Realign data lama: tahun ajaran mengikuti angkatan kelasnya masing-masing
+        $this->realignAcademicYears();
 
         // Admin
         User::updateOrCreate(['username' => 'admin'], [
@@ -20,7 +31,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('admin123'),
             'role' => 'admin',
             'class_name' => 'XI RPL 1',
-            'academic_year_id' => $yearId,
+            'academic_year_id' => $yearXI,
         ]);
 
         // Ketua Kelas
@@ -43,7 +54,7 @@ class DatabaseSeeder extends Seeder
                 'password'   => Hash::make($u['password']),
                 'role'       => 'ketua_kelas',
                 'class_name' => $u['class_name'],
-                'academic_year_id' => $yearId,
+                'academic_year_id' => $yearXI,
             ]);
         }
 
@@ -67,7 +78,7 @@ class DatabaseSeeder extends Seeder
                 'password'   => Hash::make($u['password']),
                 'role'       => 'sekretaris',
                 'class_name' => $u['class_name'],
-                'academic_year_id' => $yearId,
+                'academic_year_id' => $yearXI,
             ]);
         }
 
@@ -79,7 +90,7 @@ class DatabaseSeeder extends Seeder
             'role'       => 'pj_mapel',
             'class_name' => 'XI RPL 1',
             'pj_subject' => 'Matematika',
-            'academic_year_id' => $yearId,
+            'academic_year_id' => $yearXI,
         ]);
 
         User::updateOrCreate(['username' => 'pj_bahasa'], [
@@ -89,7 +100,61 @@ class DatabaseSeeder extends Seeder
             'role'       => 'pj_mapel',
             'class_name' => 'XI RPL 1',
             'pj_subject' => 'Bahasa Indonesia',
-            'academic_year_id' => $yearId,
+            'academic_year_id' => $yearXI,
         ]);
+
+        // Akun demo siswa (1 per angkatan) — login tinggal pakai username + password
+        $demoSiswa = [
+            ['username' => 'siswa_x',   'class_name' => 'X RPL 1',   'password' => 'demo1234'],
+            ['username' => 'siswa_xi',  'class_name' => 'XI RPL 1',  'password' => 'demo1234'],
+            ['username' => 'siswa_xii', 'class_name' => 'XII RPL 1', 'password' => 'demo1234'],
+        ];
+
+        foreach ($demoSiswa as $d) {
+            $student = Student::where('class_name', $d['class_name'])->orderBy('nis')->first();
+            if (! $student) {
+                continue;
+            }
+
+            User::updateOrCreate(['username' => $d['username']], [
+                'nis'        => $student->nis,
+                'name'       => $student->name,
+                'email'      => $d['username'] . '@example.com',
+                'password'   => Hash::make($d['password']),
+                'role'       => 'siswa',
+                'class_name' => $student->class_name,
+                'academic_year_id' => $student->academic_year_id,
+            ]);
+        }
+    }
+
+    // Samakan academic_year_id di users / tasks / pj_assignments dengan angkatan kelasnya
+    private function realignAcademicYears(): void
+    {
+        foreach (User::CLASS_BY_YEAR as $yearName => $classes) {
+            $yearId = AcademicYear::where('name', $yearName)->value('id');
+            if (! $yearId) {
+                continue;
+            }
+
+            DB::table('users')
+                ->whereIn('class_name', $classes)
+                ->where(function ($q) use ($yearId) {
+                    $q->whereNull('academic_year_id')->orWhere('academic_year_id', '!=', $yearId);
+                })
+                ->update(['academic_year_id' => $yearId]);
+
+            DB::table('tasks')
+                ->whereIn('class_name', $classes)
+                ->where(function ($q) use ($yearId) {
+                    $q->whereNull('academic_year_id')->orWhere('academic_year_id', '!=', $yearId);
+                })
+                ->update(['academic_year_id' => $yearId]);
+
+            DB::table('pj_assignments')
+                ->whereIn('class_name', $classes)
+                ->where('academic_year_id', '!=', $yearId)
+                ->update(['academic_year_id' => $yearId]);
+        }
     }
 }

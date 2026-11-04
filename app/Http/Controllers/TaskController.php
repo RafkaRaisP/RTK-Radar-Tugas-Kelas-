@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicYear;
 use App\Models\ProofPhoto;
 use App\Models\Subject;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\PhotoCompressor;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +62,7 @@ class TaskController extends Controller
         }
 
         $subjects = Subject::orderBy('name')->pluck('name');
-        $classOptions = User::CLASS_OPTIONS;
+        $classOptions = User::classOptionsFor($user);
 
         return view('dashboard.agenda', compact('tasks', 'taskStatuses', 'subjects', 'classOptions'));
     }
@@ -89,9 +92,12 @@ class TaskController extends Controller
 
         $validated = $request->validate($rules);
 
+        $class = $user->isPjMapel() ? $user->class_name : ($user->role === 'admin' ? $validated['class_name'] : $user->class_name);
+
         Task::create([
             'user_id' => Auth::id(),
-            'class_name' => $user->isPjMapel() ? $user->class_name : ($user->role === 'admin' ? $validated['class_name'] : $user->class_name),
+            'class_name' => $class,
+            'academic_year_id' => User::yearIdForClass($class),
             'subject' => $user->isPjMapel() ? $user->pj_subject : $validated['subject'],
             'title' => $validated['title'],
             'deadline' => $validated['deadline'],
@@ -134,7 +140,7 @@ class TaskController extends Controller
         return redirect()->route('dashboard')->with('success', 'Tugas berhasil dihapus.');
     }
 
-    // Tandai tugas sebagai selesai / batal selesai (toggle)
+    // Siswa membatalkan pengajuan tugas (hapus pivot + foto bukti)
     public function toggleComplete(Task $task)
     {
         $user = Auth::user();
@@ -144,13 +150,20 @@ class TaskController extends Controller
 
         $existing = $user->completedTasks()->where('task_id', $task->id)->first();
 
-        if ($existing) {
-            $user->completedTasks()->detach($task);
-        } else {
-            $user->completedTasks()->attach($task, ['created_at' => now(), 'status' => 'pending']);
+        if (! $existing) {
+            return redirect()->route('dashboard')->with('info', 'Tidak ada pengajuan yang bisa dibatalkan.');
         }
 
-        return redirect()->route('dashboard');
+        // Hapus foto bukti beserta filenya supaya tidak jadi data orfan
+        $oldPhotos = ProofPhoto::where('task_id', $task->id)->where('user_id', $user->id)->get();
+        foreach ($oldPhotos as $photo) {
+            Storage::disk('public')->delete($photo->photo_path);
+            $photo->delete();
+        }
+
+        $user->completedTasks()->detach($task);
+
+        return redirect()->route('dashboard')->with('success', 'Pengajuan tugas dibatalkan.');
     }
 
     // Siswa menandai tugas selesai (submit ke verifikasi PJ)
@@ -161,17 +174,23 @@ class TaskController extends Controller
             abort(403);
         }
 
+        // Tidak ada batas ukuran — foto dikompres otomatis maks 2MB setelah upload
         $validated = $request->validate([
-            'photos' => 'required|array|min:1',
-            'photos.*' => 'image|mimes:jpg,jpeg,png,webp|max:5120',
+            'photos' => 'required|array|min:1|max:5',
+            'photos.*' => 'image|mimes:jpg,jpeg,png,webp',
+        ], [
+            'photos.*.image' => 'File harus berupa foto (JPG, PNG, atau WEBP). Format HEIC belum didukung — foto ke JPG dulu.',
+            'photos.*.mimes' => 'File harus berupa foto (JPG, PNG, atau WEBP). Format HEIC belum didukung — foto ke JPG dulu.',
         ]);
 
         $existing = $user->completedTasks()->where('task_id', $task->id)->first();
+        $hasPhotos = ProofPhoto::where('task_id', $task->id)->where('user_id', $user->id)->exists();
+
+        if ($existing && $existing->pivot->status === 'pending' && $hasPhotos) {
+            return redirect()->route('dashboard')->with('info', 'Tugas sudah dalam antrian verifikasi.');
+        }
 
         if ($existing) {
-            if ($existing->pivot->status === 'pending') {
-                return redirect()->route('dashboard')->with('info', 'Tugas sudah dalam antrian verifikasi.');
-            }
             // Hapus foto lama sebelum upload baru
             $oldPhotos = ProofPhoto::where('task_id', $task->id)->where('user_id', $user->id)->get();
             foreach ($oldPhotos as $photo) {
@@ -183,9 +202,14 @@ class TaskController extends Controller
             $user->completedTasks()->attach($task, ['created_at' => now(), 'status' => 'pending']);
         }
 
-        // Simpan foto bukti
+        // Simpan foto bukti (dikompres maks 2MB)
         foreach ($request->file('photos') as $photo) {
-            $path = $photo->store('proof-photos/'.$task->id.'/'.$user->id, 'public');
+            $path = PhotoCompressor::compressToPublic($photo, 'proof-photos/'.$task->id.'/'.$user->id);
+
+            if ($path === null) {
+                return redirect()->route('dashboard')->with('error', 'Gagal memproses foto "'.$photo->getClientOriginalName().'". Coba foto lain.');
+            }
+
             ProofPhoto::create([
                 'task_id' => $task->id,
                 'user_id' => $user->id,
@@ -228,8 +252,8 @@ class TaskController extends Controller
         return view('pj.dashboard', compact('tasks', 'confirmedTasks'));
     }
 
-    // PJ Mapel: konfirmasi tugas siswa
-    public function confirmTask(Task $task)
+    // PJ Mapel: konfirmasi tugas siswa tertentu
+    public function confirmTask(Request $request, Task $task)
     {
         $user = Auth::user();
 
@@ -237,73 +261,54 @@ class TaskController extends Controller
             abort(403);
         }
 
-        $pivotRow = DB::table('task_user')
-            ->where('task_id', $task->id)
-            ->where('status', 'pending')
-            ->first();
-
-        if (! $pivotRow) {
-            return redirect()->route('pj.dashboard')->with('error', 'Tidak ada tugas pending untuk dikonfirmasi.');
+        // Hanya boleh konfirmasi tugas di kelas & mapel miliknya
+        if (strtolower($task->class_name) !== strtolower($user->class_name)
+            || ! $user->isPjOf($task->subject)) {
+            abort(403);
         }
 
-        DB::table('task_user')
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+        ]);
+
+        $updated = DB::table('task_user')
             ->where('task_id', $task->id)
-            ->where('user_id', $pivotRow->user_id)
+            ->where('user_id', $validated['user_id'])
+            ->where('status', 'pending')
             ->update([
                 'status' => 'confirmed',
                 'confirmed_by' => $user->id,
             ]);
 
+        if (! $updated) {
+            return redirect()->route('pj.dashboard')->with('error', 'Tidak ada tugas pending untuk dikonfirmasi.');
+        }
+
         return redirect()->route('pj.dashboard')->with('success', 'Tugas berhasil dikonfirmasi.');
     }
 
-    // Export tugas ke CSV
-    public function exportCsv(Request $request)
+    // Export tugas ke PDF (bertema web)
+    public function exportPdf()
     {
         $user = Auth::user();
 
         if ($user->role === 'admin') {
             $tasks = Task::orderBy('deadline', 'asc')->get();
+            $scopeLabel = 'Semua Kelas';
         } else {
             $tasks = Task::where('class_name', $user->class_name)->orderBy('deadline', 'asc')->get();
+            $scopeLabel = $user->class_name;
         }
 
-        $filename = 'tugas-'.now()->format('Y-m-d').'.csv';
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-        ];
+        $pdf = Pdf::loadView('exports.tasks-pdf', [
+            'tasks' => $tasks,
+            'user' => $user,
+            'scopeLabel' => $scopeLabel,
+            'year' => AcademicYear::where('is_active', true)->first()
+                ?? AcademicYear::orderByDesc('name')->first(),
+            'printedAt' => now(),
+        ])->setPaper('a4', 'portrait');
 
-        $tz = $request->query('tz');
-        if ($tz) {
-            try {
-                new \DateTimeZone($tz);
-            } catch (\Exception $e) {
-                $tz = null;
-            }
-        }
-
-        $callback = function () use ($tasks, $tz) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['Judul', 'Mapel', 'Deskripsi', 'Kelas', 'Deadline', 'Status']);
-
-            foreach ($tasks as $task) {
-                $deadline = $task->deadline;
-                if ($tz) {
-                    $deadline = $deadline->setTimezone($tz);
-                }
-                fputcsv($file, [
-                    $task->title,
-                    $task->subject,
-                    $task->description ?? '',
-                    $task->class_name,
-                    $deadline->format('d/m/Y H:i'),
-                    now()->gt($task->deadline) ? 'Terlewat' : 'Aktif',
-                ]);
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return $pdf->stream('tugas-'.now()->format('Y-m-d').'.pdf');
     }
 }

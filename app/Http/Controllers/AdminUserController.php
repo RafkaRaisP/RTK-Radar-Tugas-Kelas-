@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AcademicYear;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -67,9 +66,16 @@ class AdminUserController extends Controller
         $validated['status'] = 'active';
         if (($validated['role'] ?? '') !== 'pj_mapel') {
             $validated['pj_subject'] = null;
+            $validated['previous_role'] = null;
         }
 
-        $validated['academic_year_id'] = AcademicYear::currentId();
+        // Tahun ajaran otomatis mengikuti angkatan kelasnya
+        $validated['academic_year_id'] = User::yearIdForClass($validated['class_name']);
+
+        // User baru dengan role pj_mapel: previous_role default ke siswa (role awal)
+        if (($validated['role'] ?? '') === 'pj_mapel') {
+            $validated['previous_role'] = 'siswa';
+        }
 
         User::create($validated);
 
@@ -95,9 +101,17 @@ class AdminUserController extends Controller
 
         if ($validated['role'] !== 'pj_mapel') {
             $validated['pj_subject'] = null;
+            // Keluar dari role PJ: buang jejak previous_role
+            if ($user->role === 'pj_mapel') {
+                $validated['previous_role'] = null;
+            }
+        } elseif ($user->role !== 'pj_mapel') {
+            // Masuk role PJ: simpan role asli supaya bisa dikembalikan
+            $validated['previous_role'] = $user->role;
         }
 
-        $validated['academic_year_id'] = AcademicYear::currentId();
+        // Tahun ajaran otomatis mengikuti angkatan kelasnya
+        $validated['academic_year_id'] = User::yearIdForClass($validated['class_name']);
 
         $user->update($validated);
 

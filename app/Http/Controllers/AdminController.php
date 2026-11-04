@@ -36,7 +36,8 @@ class AdminController extends Controller
 
         $pending = DB::table('task_user')->where('status', 'pending')->count();
         $confirmed = DB::table('task_user')->where('status', 'confirmed')->count();
-        $unworked = $taskCount - DB::table('task_user')->distinct('task_id')->count('task_id');
+        $workedTaskCount = (int) DB::table('task_user')->selectRaw('COUNT(DISTINCT task_id) as c')->value('c');
+        $unworked = max(0, $taskCount - $workedTaskCount);
 
         $taskByClass = Task::select('class_name', DB::raw('count(*) as total'))->groupBy('class_name')->orderBy('class_name')->pluck('total', 'class_name');
         $subjectByClass = Task::select('subject', 'class_name', DB::raw('count(*) as total'))
@@ -79,6 +80,7 @@ class AdminController extends Controller
             'tasks' => $tasks,
             'subjects' => $subjects,
             'classOptions' => User::CLASS_OPTIONS,
+            'academicYears' => AcademicYear::orderByDesc('name')->get(),
         ]);
     }
 
@@ -91,9 +93,12 @@ class AdminController extends Controller
             'subject' => ['required', Rule::exists('subjects', 'name')],
             'deadline' => 'required|date',
             'description' => 'nullable|string',
-            'class_name' => ['required', Rule::in(User::CLASS_OPTIONS)],
+            'class_name' => ['required', Rule::in(User::CLASS_OPTIONS), $this->classMustMatchYear($request)],
             'academic_year_id' => ['nullable', Rule::exists('academic_years', 'id')],
         ]);
+
+        // Tahun ajaran tugas selalu mengikuti angkatan kelasnya
+        $validated['academic_year_id'] = User::yearIdForClass($validated['class_name']);
 
         Task::create([
             'user_id' => auth()->id(),
@@ -112,12 +117,30 @@ class AdminController extends Controller
             'subject' => ['required', Rule::exists('subjects', 'name')],
             'deadline' => 'required|date',
             'description' => 'nullable|string',
+            'class_name' => ['nullable', Rule::in(User::CLASS_OPTIONS), $this->classMustMatchYear($request)],
             'academic_year_id' => ['nullable', Rule::exists('academic_years', 'id')],
         ]);
+
+        if (empty($validated['class_name'])) {
+            unset($validated['class_name']);
+        } else {
+            $validated['academic_year_id'] = User::yearIdForClass($validated['class_name']);
+        }
 
         $task->update($validated);
 
         return back()->with('success', 'Tugas berhasil diperbarui.');
+    }
+
+    // Kelas yang dikirim harus termasuk tahun ajaran yang dipilih (jika ada)
+    private function classMustMatchYear(Request $request): \Closure
+    {
+        return function ($attribute, $value, $fail) use ($request) {
+            $yearId = $request->input('academic_year_id');
+            if ($yearId && ! in_array($value, User::classesForYearId((int) $yearId), true)) {
+                $fail('Kelas tidak termasuk tahun ajaran yang dipilih.');
+            }
+        };
     }
 
     public function destroyTask(Task $task)

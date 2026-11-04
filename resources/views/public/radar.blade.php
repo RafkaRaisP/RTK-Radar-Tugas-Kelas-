@@ -13,7 +13,7 @@
                 </span>
                 <span class="min-w-0">
                     <span class="font-display block truncate text-lg font-extrabold leading-none sm:text-xl">Radar Tugas Kelas</span>
-                    <span class="font-mono mt-1 hidden text-[9px] uppercase tracking-[.24em] text-red-100/70 sm:block">Agenda deadline sekolah</span>
+                    <span class="font-mono mt-1 hidden text-[9px] uppercase tracking-[.24em] text-red-100 sm:block">Agenda deadline sekolah</span>
                 </span>
             </a>
 
@@ -40,43 +40,47 @@
             <div class="max-w-3xl">
                 <div class="mb-4 flex items-center gap-3">
                     <span class="rounded-sm border-2 border-[#be1836] px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#be1836] dark:border-rose-400 dark:text-rose-400">Terbuka untuk umum</span>
-                    <span class="font-mono text-[10px] uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">Diperbarui tiap detik</span>
+                    <span class="font-mono text-[10px] uppercase tracking-[.18em] txt-label">Diperbarui tiap detik</span>
                 </div>
                 <h1 class="font-display text-5xl font-extrabold leading-[.9] tracking-[-.04em] sm:text-6xl lg:text-7xl">Agenda tugas<br><span class="text-[#be1836] dark:text-rose-400">semua kelas.</span></h1>
                 <p class="mt-5 max-w-xl text-sm leading-6 text-stone-600 dark:text-zinc-400 sm:text-base">Baca deadline seperti membuka buku agenda. Hijau masih aman, kuning mulai dekat, dan merah perlu dikerjakan sekarang.</p>
             </div>
 
             <div class="paper-sheet min-w-[220px] rounded-sm py-5 pl-12 pr-5">
-                <p class="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-stone-500 dark:text-zinc-400">Catatan terdaftar</p>
+                <p class="font-mono text-[10px] font-bold uppercase tracking-[.2em] txt-label">Catatan terdaftar</p>
                 <p class="font-display mt-1 text-4xl font-extrabold leading-none">{{ $tasks->total() }}</p>
-                <p class="mt-2 text-xs text-stone-500 dark:text-zinc-400">tugas dalam radar</p>
+                <p class="mt-2 text-xs txt-label">tugas dalam radar</p>
             </div>
         </section>
 
         <section aria-label="Filter tugas" class="anim-in mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style="animation-delay: 80ms">
             <div class="flex items-center gap-2">
-                <span class="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-stone-500 dark:text-zinc-400">Saring agenda</span>
+                <span class="font-mono text-[10px] font-bold uppercase tracking-[.2em] txt-label">Saring agenda</span>
                 <span class="hidden h-px w-12 bg-stone-300 dark:bg-white/10 sm:block"></span>
             </div>
             <div class="relative w-full sm:w-auto">
                 <label for="classFilter" class="sr-only">Pilih kelas</label>
                 <select id="classFilter" class="field min-h-11 w-full appearance-none rounded-sm py-2.5 pl-4 pr-11 text-sm font-semibold sm:min-w-[210px]">
                     <option value="">Semua Kelas</option>
-                    @foreach($classOptions as $class)
-                        <option value="{{ $class }}" {{ request('class_name') === $class ? 'selected' : '' }}>{{ $class }}</option>
+                    @foreach(\App\Models\User::classGroups() as $group)
+                        <optgroup label="{{ $group['label'] }}">
+                            @foreach($group['classes'] as $class)
+                                <option value="{{ $class }}" {{ request('class_name') === $class ? 'selected' : '' }}>{{ $class }}</option>
+                            @endforeach
+                        </optgroup>
                     @endforeach
                 </select>
-                <svg class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500 dark:text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                <svg class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 txt-label" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
             </div>
         </section>
 
         @if($tasks->isEmpty())
             <section class="paper-sheet anim-in mx-auto mt-12 max-w-xl rounded-sm px-8 py-16 text-center" style="animation-delay: 140ms">
-                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-stone-300 text-stone-400 dark:border-zinc-700 dark:text-zinc-500">
+                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-stone-300 txt-muted dark:border-zinc-700">
                     <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <p class="font-display mt-5 text-2xl font-bold">Halaman ini masih kosong.</p>
-                <p class="mt-2 text-sm text-stone-500 dark:text-zinc-400">Tugas yang ditambahkan pengurus kelas akan muncul di sini.</p>
+                <p class="mt-2 text-sm txt-label">Tugas yang ditambahkan pengurus kelas akan muncul di sini.</p>
             </section>
         @else
             <section id="taskGrid" aria-label="Daftar tugas" class="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -88,7 +92,7 @@
                         <div class="mb-5 flex items-start justify-between gap-4 border-b border-dashed border-stone-300 pb-3 dark:border-white/10">
                             <div class="flex min-w-0 items-center gap-2.5">
                                 <span class="status-dot h-2 w-2 shrink-0 rounded-full" aria-hidden="true"></span>
-                                <span class="truncate font-mono text-[10px] font-bold uppercase tracking-[.16em] text-stone-500 dark:text-zinc-400">{{ $task->class_name }}</span>
+                                <span class="truncate font-mono text-[10px] font-bold uppercase tracking-[.16em] txt-label">{{ $task->class_name }}</span>
                             </div>
                             <span class="urgency-stamp cd-count shrink-0 rounded-sm border px-2 py-1 font-mono text-[10px] font-bold">--</span>
                         </div>
@@ -102,7 +106,7 @@
                         </div>
 
                         <div class="mt-6 flex items-center justify-between gap-3 border-t border-stone-200 pt-3 pl-5 dark:border-white/10">
-                            <span class="font-mono text-[9px] uppercase tracking-[.18em] text-stone-400">Tenggat</span>
+                            <span class="font-mono text-[9px] uppercase tracking-[.18em] txt-muted">Tenggat</span>
                             <span class="dl-label text-right font-mono text-[10px] font-medium tabular-nums text-stone-600 dark:text-zinc-400" data-iso="{{ $task->deadline->toIso8601String() }}">{{ $task->deadline->format('d M Y, H:i') }}</span>
                         </div>
                     </article>
@@ -117,8 +121,8 @@
 
     <footer class="border-t border-stone-300 bg-[#eee5d6]/80 dark:border-white/10 dark:bg-zinc-950/80">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-6 sm:px-8">
-            <span class="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-stone-500 dark:text-zinc-500">Radar Tugas Kelas</span>
-            <span class="font-mono text-[9px] uppercase tracking-[.2em] text-stone-400 dark:text-zinc-600">Jangan lewatkan tenggat</span>
+            <span class="font-mono text-[9px] font-bold uppercase tracking-[.2em] txt-label">Radar Tugas Kelas</span>
+            <span class="font-mono text-[9px] uppercase tracking-[.2em] txt-muted">Jangan lewatkan tenggat</span>
         </div>
     </footer>
 @endsection

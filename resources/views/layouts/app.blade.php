@@ -78,8 +78,16 @@
             red: 'Warna berubah: tersisa kurang dari 1 hari!',
             expired: 'Warna berubah: deadline sudah habis'
         };
+        // Permission notifikasi hanya diminta SETELAH ada gestur user.
+        // Meminta saat load termasuk pola intrusif dan sering ditolak browser.
         if (document.querySelector('.task-card-item') && 'Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
+            var askNotification = function () {
+                document.removeEventListener('pointerdown', askNotification);
+                document.removeEventListener('keydown', askNotification);
+                Notification.requestPermission();
+            };
+            document.addEventListener('pointerdown', askNotification, { passive: true });
+            document.addEventListener('keydown', askNotification);
         }
 
         function updateCountdowns() {

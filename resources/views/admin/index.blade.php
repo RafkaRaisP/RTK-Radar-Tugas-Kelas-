@@ -8,7 +8,7 @@
             <div class="mb-3 flex items-center gap-3">
                 <span class="font-mono text-[10px] font-bold uppercase tracking-[.22em] text-[#be1836] dark:text-rose-400">Panel admin</span>
                 <span class="h-px w-12 bg-stone-300 dark:bg-white/10"></span>
-                <span class="font-mono text-[10px] text-stone-400">{{ now()->format('d.m.Y') }}</span>
+                <span class="font-mono text-[10px] txt-muted">{{ now()->format('d.m.Y') }}</span>
             </div>
             <h1 class="font-display text-4xl font-extrabold leading-none tracking-[-.035em] sm:text-5xl">Ringkasan kelas.</h1>
             <div class="mt-3 flex items-center gap-2 text-sm text-stone-600 dark:text-zinc-400">
@@ -27,47 +27,47 @@
 
     <section aria-label="Ringkasan user" class="anim-in mt-7 grid grid-cols-2 gap-3 lg:grid-cols-5" style="animation-delay: 60ms">
         <article class="index-card rounded-sm border-t-4 !border-t-[#be1836] px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">01 / Total user</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">01 / Total user</p>
             <p class="font-display mt-1 text-3xl font-extrabold">{{ $userCount }}</p>
         </article>
         <article class="index-card rounded-sm border-t-4 !border-t-amber-500 px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">02 / Pengurus</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">02 / Pengurus</p>
             <p class="font-display mt-1 text-3xl font-extrabold text-amber-600 dark:text-amber-400">{{ ($roleCounts['ketua_kelas'] ?? 0) + ($roleCounts['sekretaris'] ?? 0) }}</p>
         </article>
         <article class="index-card rounded-sm border-t-4 !border-t-emerald-500 px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">03 / PJ Mapel</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">03 / PJ Mapel</p>
             <p class="font-display mt-1 text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{{ $roleCounts['pj_mapel'] ?? 0 }}</p>
         </article>
         <article class="index-card rounded-sm border-t-4 !border-t-sky-500 px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">04 / Siswa</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">04 / Siswa</p>
             <p class="font-display mt-1 text-3xl font-extrabold text-sky-600 dark:text-sky-400">{{ $roleCounts['siswa'] ?? 0 }}</p>
         </article>
         <article class="index-card rounded-sm border-t-4 !border-t-stone-400 px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">05 / Admin</p>
-            <p class="font-display mt-1 text-3xl font-extrabold text-stone-500 dark:text-zinc-300">{{ $roleCounts['admin'] ?? 0 }}</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">05 / Admin</p>
+            <p class="font-display mt-1 text-3xl font-extrabold txt-label">{{ $roleCounts['admin'] ?? 0 }}</p>
         </article>
     </section>
 
     <section aria-label="Ringkasan tugas" class="anim-in mt-7 grid grid-cols-2 gap-3 lg:grid-cols-5" style="animation-delay: 110ms">
         <article class="index-card rounded-sm border-t-4 !border-t-[#be1836] px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">Total tugas</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">Total tugas</p>
             <p class="font-display mt-1 text-3xl font-extrabold">{{ $taskCount }}</p>
         </article>
         <article class="index-card rounded-sm border-t-4 !border-t-emerald-500 px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">Masih aktif</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">Masih aktif</p>
             <p class="font-display mt-1 text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{{ $taskActive }}</p>
         </article>
         <article class="index-card rounded-sm border-t-4 !border-t-red-500 px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">Terlewat</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">Terlewat</p>
             <p class="font-display mt-1 text-3xl font-extrabold text-red-600 dark:text-red-400">{{ $taskExpired }}</p>
         </article>
         <article class="index-card rounded-sm border-t-4 !border-t-amber-500 px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">Pending</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">Pending</p>
             <p class="font-display mt-1 text-3xl font-extrabold text-amber-600 dark:text-amber-400">{{ $pending }}</p>
         </article>
         <article class="index-card rounded-sm border-t-4 !border-t-stone-400 px-4 pb-5 pt-4">
-            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-stone-500 dark:text-zinc-400">Belum dikerjakan</p>
-            <p class="font-display mt-1 text-3xl font-extrabold text-stone-500 dark:text-zinc-300">{{ $unworked }}</p>
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[.18em] txt-label">Belum dikerjakan</p>
+            <p class="font-display mt-1 text-3xl font-extrabold txt-label">{{ $unworked }}</p>
         </article>
     </section>
 
@@ -80,7 +80,7 @@
                 </div>
             </div>
             @if($classCounts->isEmpty())
-                <p class="text-sm text-stone-500 dark:text-zinc-400">Belum ada data.</p>
+                <p class="text-sm txt-label">Belum ada data.</p>
             @else
                 <ul class="space-y-3">
                     @foreach($classCounts as $class => $total)
@@ -104,7 +104,7 @@
                 </div>
             </div>
             @if($taskByClass->isEmpty())
-                <p class="text-sm text-stone-500 dark:text-zinc-400">Belum ada data.</p>
+                <p class="text-sm txt-label">Belum ada data.</p>
             @else
                 <ul class="space-y-3">
                     @foreach($taskByClass as $class => $total)
@@ -127,15 +127,15 @@
                 <p class="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-[#be1836] dark:text-rose-400">Gambaran</p>
                 <h2 class="font-display mt-1 text-2xl font-extrabold">Mapel x Kelas</h2>
             </div>
-            <span class="font-mono text-[9px] uppercase tracking-[.16em] text-stone-400">jumlah tugas</span>
+            <span class="font-mono text-[9px] uppercase tracking-[.16em] txt-muted">jumlah tugas</span>
         </div>
         @if($subjectByClass->isEmpty())
-            <p class="text-sm text-stone-500 dark:text-zinc-400">Belum ada data tugas.</p>
+            <p class="text-sm txt-label">Belum ada data tugas.</p>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[640px] text-left text-sm">
                     <thead>
-                        <tr class="border-b border-stone-300 dark:border-white/10 font-mono text-[10px] uppercase tracking-wider text-stone-500 dark:text-zinc-400">
+                        <tr class="border-b border-stone-300 dark:border-white/10 font-mono text-[10px] uppercase tracking-wider txt-label">
                             <th class="py-2 pr-4 font-bold">Kelas</th>
                             @foreach($subjectNames as $sn)
                                 <th class="px-2 py-2 font-bold">{{ $sn }}</th>

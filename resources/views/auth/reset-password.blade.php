@@ -19,7 +19,7 @@
                 <div class="mt-9 h-1 w-24 bg-white"></div>
                 <p class="mt-6 max-w-md text-base leading-7 text-red-50/80">Buat password baru yang tidak sama dengan yang lama, lalu simpan.</p>
             </div>
-            <div class="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-red-100/70"><span>Reset password</span><span>RTK-04</span></div>
+            <div class="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-red-100"><span>Reset password</span><span>RTK-04</span></div>
         </div>
     </aside>
 
@@ -34,7 +34,7 @@
                 <div class="mb-3 flex items-center gap-3">
                     <span class="font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-[#be1836] dark:text-rose-400">Password baru</span>
                     <span class="h-px flex-1 bg-stone-300 dark:bg-white/10"></span>
-                    <span class="font-mono text-[10px] text-stone-400">04</span>
+                    <span class="font-mono text-[10px] txt-muted">04</span>
                 </div>
                 <h2 class="font-display text-4xl font-extrabold tracking-tight">Atur ulang password.</h2>
                 <p class="mt-2 text-sm text-stone-600 dark:text-zinc-400">Isi password baru untuk akunmu (minimal 6 karakter).</p>
@@ -45,7 +45,7 @@
                 <input type="hidden" name="token" value="{{ $token }}">
 
                 <div>
-                    <label for="email" class="font-mono mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500 dark:text-zinc-400">01 / Email terdaftar</label>
+                    <label for="email" class="font-mono mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] txt-label">01 / Email terdaftar</label>
                     <input type="email" id="email" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email"
                         class="field w-full rounded-sm px-4 py-3 text-sm" placeholder="namakamu@gmail.com">
                     @error('email')
@@ -54,7 +54,7 @@
                 </div>
 
                 <div>
-                    <label for="password" class="font-mono mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500 dark:text-zinc-400">02 / Password baru</label>
+                    <label for="password" class="font-mono mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] txt-label">02 / Password baru</label>
                     <input type="password" id="password" name="password" required autocomplete="new-password"
                         class="field w-full rounded-sm px-4 py-3 text-sm" placeholder="Minimal 6 karakter">
                     @error('password')
@@ -63,7 +63,7 @@
                 </div>
 
                 <div>
-                    <label for="password_confirmation" class="font-mono mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-stone-500 dark:text-zinc-400">03 / Ulangi password</label>
+                    <label for="password_confirmation" class="font-mono mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] txt-label">03 / Ulangi password</label>
                     <input type="password" id="password_confirmation" name="password_confirmation" required autocomplete="new-password"
                         class="field w-full rounded-sm px-4 py-3 text-sm" placeholder="Ketik ulang password">
                 </div>
@@ -75,7 +75,7 @@
 
             <div class="mt-8 flex flex-col items-center justify-between gap-3 text-sm sm:flex-row">
                 <p class="text-stone-600 dark:text-zinc-400">Ingat password? <a href="{{ route('login') }}" class="font-bold text-[#be1836] underline decoration-[#be1836]/30 underline-offset-4 hover:decoration-[#be1836] dark:text-rose-400">Masuk</a></p>
-                <a href="{{ route('radar') }}" class="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-500 hover:text-[#be1836] dark:text-zinc-400 dark:hover:text-rose-400">Radar publik &rarr;</a>
+                <a href="{{ route('radar') }}" class="font-mono text-[10px] font-bold uppercase tracking-widest txt-label hover:text-[#be1836] dark:text-zinc-400 dark:hover:text-rose-400">Radar publik &rarr;</a>
             </div>
         </section>
     </main>

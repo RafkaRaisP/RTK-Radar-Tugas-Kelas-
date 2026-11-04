@@ -64,10 +64,63 @@ class AdminPjController extends Controller
     {
         $user = User::find($validated['user_id']);
 
-        if (!$user
+        if (! $user
             || (string) $user->academic_year_id !== (string) $validated['academic_year_id']
             || $user->class_name !== $validated['class_name']) {
             return 'Siswa terpilih tidak terdaftar di kelas / tahun ajaran tersebut.';
+        }
+
+        return null;
+    }
+
+    // Kelas harus termasuk tahun ajaran yang dipilih
+    private function classMustMatchYear(Request $request): \Closure
+    {
+        return function ($attribute, $value, $fail) use ($request) {
+            $yearId = $request->input('academic_year_id');
+            if ($yearId && ! in_array($value, User::classesForYearId((int) $yearId), true)) {
+                $fail('Kelas tidak termasuk tahun ajaran yang dipilih.');
+            }
+        };
+    }
+
+    // Aturan bisnis: 1 kelas + 1 mapel + 1 tahun ajaran = 1 PJ;
+    // 1 orang hanya boleh menjadi PJ satu mapel.
+    private function conflictError(array $validated, ?int $ignoreId = null): ?string
+    {
+        $subjectName = Subject::find($validated['subject_id'])?->name ?? 'mapel ini';
+
+        $combo = PjAssignment::with('user')
+            ->where('academic_year_id', $validated['academic_year_id'])
+            ->where('class_name', $validated['class_name'])
+            ->where('subject_id', $validated['subject_id'])
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->first();
+
+        if ($combo && $combo->user_id != $validated['user_id']) {
+            return sprintf(
+                'Kelas %s mapel %s sudah memiliki PJ: %s (%s). Hapus atau edit PJ tersebut terlebih dahulu.',
+                $validated['class_name'],
+                $subjectName,
+                $combo->user->name ?? 'Tidak diketahui',
+                $combo->user->username ?? '-',
+            );
+        }
+
+        $other = PjAssignment::with(['user', 'subject', 'academicYear'])
+            ->where('user_id', $validated['user_id'])
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->first();
+
+        if ($other) {
+            return sprintf(
+                '%s (%s) sudah menjadi PJ mapel %s di kelas %s (tahun ajaran %s). Satu orang hanya boleh menjadi PJ satu mapel.',
+                $other->user->name ?? 'User tersebut',
+                $other->user->username ?? '-',
+                $other->subject->name ?? '-',
+                $other->class_name,
+                $other->academicYear->name ?? '-',
+            );
         }
 
         return null;
@@ -81,25 +134,21 @@ class AdminPjController extends Controller
             'user_id' => ['required', Rule::exists('users', 'id')],
             'subject_id' => ['required', Rule::exists('subjects', 'id')],
             'academic_year_id' => ['required', Rule::exists('academic_years', 'id')],
-            'class_name' => ['required', Rule::in(User::CLASS_OPTIONS)],
+            'class_name' => ['required', 'string', $this->classMustMatchYear($request)],
         ]);
 
         if ($err = $this->cascadeError($validated)) {
             return back()->withErrors(['user_id' => $err]);
         }
 
-        $exists = PjAssignment::where($validated)->exists();
-        if ($exists) {
-            return back()->with('error', 'PJ assignment untuk user, mapel, tahun ajaran, dan kelas ini sudah ada.');
+        if ($err = $this->conflictError($validated)) {
+            return back()->with('error', $err);
         }
 
         PjAssignment::create($validated);
 
-        // Update user role to pj_mapel if not already
-        $user = User::find($validated['user_id']);
-        if ($user->role !== 'pj_mapel') {
-            $user->update(['role' => 'pj_mapel']);
-        }
+        // Sinkronkan role + pj_subject di user agar dashboard PJ langsung jalan
+        User::find($validated['user_id'])->promoteToPj(Subject::find($validated['subject_id'])->name);
 
         return back()->with('success', 'PJ berhasil ditambahkan.');
     }
@@ -112,19 +161,34 @@ class AdminPjController extends Controller
             'user_id' => ['required', Rule::exists('users', 'id')],
             'subject_id' => ['required', Rule::exists('subjects', 'id')],
             'academic_year_id' => ['required', Rule::exists('academic_years', 'id')],
-            'class_name' => ['required', Rule::in(User::CLASS_OPTIONS)],
+            'class_name' => ['required', 'string', $this->classMustMatchYear($request)],
         ]);
 
         if ($err = $this->cascadeError($validated)) {
             return back()->withErrors(['user_id' => $err]);
         }
 
-        $duplicate = PjAssignment::where($validated)->where('id', '!=', $pj->id)->exists();
-        if ($duplicate) {
-            return back()->with('error', 'PJ assignment untuk user, mapel, tahun ajaran, dan kelas ini sudah ada.');
+        if ($err = $this->conflictError($validated, $pj->id)) {
+            return back()->with('error', $err);
         }
 
+        $oldUserId = $pj->user_id;
         $pj->update($validated);
+
+        $newUserId = (int) $validated['user_id'];
+
+        // User baru / yang tetap: sync role + pj_subject
+        User::find($newUserId)->promoteToPj(Subject::find($validated['subject_id'])->name);
+
+        // User lama yang diganti: cabut status PJ kalau assignment-nya habis
+        if ($oldUserId !== $newUserId) {
+            $oldUser = User::find($oldUserId);
+            if ($oldUser
+                && $oldUser->role === 'pj_mapel'
+                && ! PjAssignment::where('user_id', $oldUserId)->exists()) {
+                $oldUser->demoteFromPj();
+            }
+        }
 
         return back()->with('success', 'PJ assignment diperbarui.');
     }
@@ -133,7 +197,14 @@ class AdminPjController extends Controller
     {
         $this->authorizeAdmin();
 
+        $userId = $pj->user_id;
         $pj->delete();
+
+        // Kalau user tidak punya assignment lain, revert status PJ-nya
+        $user = User::find($userId);
+        if ($user && $user->role === 'pj_mapel' && ! PjAssignment::where('user_id', $userId)->exists()) {
+            $user->demoteFromPj();
+        }
 
         return back()->with('success', 'PJ assignment dihapus.');
     }

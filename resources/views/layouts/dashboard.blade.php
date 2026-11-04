@@ -13,13 +13,13 @@
                 </span>
                 <span>
                     <span class="font-display block text-lg font-extrabold leading-none">Radar Tugas</span>
-                    <span class="font-mono mt-1 block text-[9px] uppercase tracking-[.22em] text-red-100/70 dark:text-zinc-400">Buku kelas</span>
+                    <span class="font-mono mt-1 block text-[9px] uppercase tracking-[.22em] text-red-100 dark:text-zinc-400">Buku kelas</span>
                 </span>
             </a>
         </div>
 
         <nav aria-label="Navigasi dashboard" class="flex-1 px-4 py-7">
-            <p class="font-mono mb-3 px-3 text-[9px] font-bold uppercase tracking-[.24em] text-red-100/60 dark:text-zinc-500">Daftar isi</p>
+            <p class="font-mono mb-3 px-3 text-[9px] font-bold uppercase tracking-[.24em] text-red-100">Daftar isi</p>
             @php
                 $isAdmin = Auth::user()->role === 'admin';
                 $isPj = Auth::user()->isPjMapel();
@@ -72,16 +72,16 @@
             </div>
 
             <div class="mt-9 border-t border-white/15 pt-6">
-                <p class="font-mono mb-3 px-3 text-[9px] font-bold uppercase tracking-[.24em] text-red-100/60 dark:text-zinc-500">Identitas</p>
+                <p class="font-mono mb-3 px-3 text-[9px] font-bold uppercase tracking-[.24em] text-red-100">Identitas</p>
                 <div class="mx-1 rotate-[-1deg] rounded-sm bg-[#fffaf0] p-4 text-stone-900 shadow-lg">
                     <div class="flex items-center gap-3">
                         <span class="font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-[#be1836] text-lg font-extrabold text-[#be1836]">{{ strtoupper(Str::substr(Auth::user()->name, 0, 1)) }}</span>
                         <span class="min-w-0">
                             <span class="block truncate text-sm font-bold">{{ Auth::user()->name }}</span>
-                            <span class="block truncate font-mono text-[9px] text-stone-500">{{ Auth::user()->username }}</span>
+                            <span class="block truncate font-mono text-[9px] txt-label">{{ Auth::user()->username }}</span>
                         </span>
                     </div>
-                    <div class="mt-3 flex items-center justify-between border-t border-dashed border-stone-300 pt-3 font-mono text-[9px] uppercase tracking-wider text-stone-500">
+                    <div class="mt-3 flex items-center justify-between border-t border-dashed border-stone-300 pt-3 font-mono text-[9px] uppercase tracking-wider txt-label">
                         <span>{{ Auth::user()->class_name }}</span>
                         <span>{{ match(Auth::user()->role) { 'admin' => 'Admin', 'ketua_kelas' => 'Ketua', 'sekretaris' => 'Sekretaris', 'pj_mapel' => 'PJ ' . Auth::user()->pj_subject, default => 'Siswa' } }}</span>
                     </div>
@@ -138,16 +138,32 @@
         }
         sidebarToggle?.addEventListener('click', openSidebar);
         overlay.addEventListener('click', closeSidebar);
+
+        // Satu jalur untuk SEMUA modal: focus trap + Escape.
+        function getOpenModal() {
+            if (addModal && addModal.classList.contains('is-open')) return addModal;
+            if (proofModal && proofModal.classList.contains('is-open')) return proofModal;
+            return null;
+        }
         document.addEventListener('keydown', function (e) {
+            var open = getOpenModal();
             if (e.key === 'Escape') {
-                if (addModal?.classList.contains('is-open')) closeModal();
+                if (open === addModal) closeModal();
+                else if (open === proofModal) closeProofModal();
                 else closeSidebar();
                 return;
             }
-            if (e.key !== 'Tab' || !addModal?.classList.contains('is-open')) return;
-            var focusable = addModal.querySelectorAll('button, [href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (e.key !== 'Tab' || !open) return;
+            var focusable = open.querySelectorAll('button, [href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (!focusable.length) return;
             var first = focusable[0];
             var last = focusable[focusable.length - 1];
+            // Fokus keluar dari modal (atau modal kehilangan fokus) → kembalikan ke dalam.
+            if (!open.contains(document.activeElement)) {
+                e.preventDefault();
+                (e.shiftKey ? last : first).focus();
+                return;
+            }
             if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
             if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
         });
@@ -197,6 +213,7 @@
             sidebar.inert = true;
             pageContent.inert = true;
             document.body.style.overflow = 'hidden';
+            setTimeout(function () { proofInput?.focus(); }, 0);
         }
         function closeProofModal() {
             proofModal.classList.remove('is-open');
@@ -214,8 +231,8 @@
             var files = Array.from(this.files);
             if (files.length === 0) return;
             files.forEach(function (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    proofError.textContent = 'File "' + file.name + '" melebihi 5MB.';
+                if (file.type && file.type.indexOf('image/') !== 0) {
+                    proofError.textContent = 'File "' + file.name + '" bukan foto. Format HEIC belum didukung — foto ke JPG dulu.';
                     proofError.classList.remove('hidden');
                     return;
                 }
@@ -238,11 +255,13 @@
             }
         });
 
-        function startEdit(id, title, subject, deadline, description) {
+        function startEdit(id, title, subject, deadline, description, className) {
             document.getElementById('edit-title-' + id).value = title;
             document.getElementById('edit-subject-' + id).value = subject;
             document.getElementById('edit-deadline-' + id).value = isoToLocalInput(deadline);
             document.getElementById('edit-description-' + id).value = description;
+            var classSel = document.getElementById('edit-class-' + id);
+            if (classSel && className) classSel.value = className;
             document.getElementById('edit-row-' + id).classList.add('is-open');
             document.getElementById('edit-title-' + id).focus();
         }
@@ -266,39 +285,10 @@
                 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
         }
 
-        function getUserTZ() {
-            if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
-                try {
-                    var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                    if (tz) return tz;
-                } catch (e) {}
-            }
-            if (window._userCoord) {
-                var off = Math.round(window._userCoord.longitude / 15) * 60;
-                var sign = off >= 0 ? '+' : '-';
-                return sign + pad2(Math.floor(Math.abs(off) / 60)) + ':' + pad2(Math.abs(off) % 60);
-            }
-            return null;
-        }
-
-        if (!window._gpsDone && 'geolocation' in navigator) {
-            window._gpsDone = true;
-            navigator.geolocation.getCurrentPosition(
-                function (pos) { window._userCoord = pos.coords; },
-                function () {},
-                { timeout: 5000, maximumAge: 600000 }
-            );
-        }
-
-        var exportLink = document.getElementById('exportLink');
-        if (exportLink) {
-            var tz = getUserTZ();
-            if (tz) exportLink.href += (exportLink.href.indexOf('?') >= 0 ? '&' : '?') + 'tz=' + encodeURIComponent(tz);
-        }
-
         document.querySelectorAll('form[action*="/tasks"]').forEach(function (f) {
             var input = f.querySelector('input[name="deadline"]');
             if (input && input.type === 'datetime-local') {
+                // Normalisasi nilai panjang (mis. old() hasil redirect validasi) saat load
                 if (input.value && input.value.includes('T') && input.value.length > 16) {
                     var d = new Date(input.value);
                     if (!isNaN(d.getTime())) {
@@ -306,6 +296,12 @@
                             'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
                     }
                 }
+                // Konversi ke ISO ber-offset saat submit supaya deadline tidak meleset
+                f.addEventListener('submit', function () {
+                    if (input.value) {
+                        input.value = localToISO(input.value);
+                    }
+                });
             }
         });
     </script>

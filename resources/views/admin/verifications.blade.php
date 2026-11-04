@@ -8,7 +8,7 @@
             <div class="mb-3 flex items-center gap-3">
                 <span class="font-mono text-[10px] font-bold uppercase tracking-[.22em] text-[#be1836] dark:text-rose-400">Panel admin / 04</span>
                 <span class="h-px w-12 bg-stone-300 dark:bg-white/10"></span>
-                <span class="font-mono text-[10px] text-stone-400">{{ $items->total() }} catatan</span>
+                <span class="font-mono text-[10px] txt-muted">{{ $items->total() }} catatan</span>
             </div>
             <h1 class="font-display text-4xl font-extrabold leading-none tracking-[-.035em] sm:text-5xl">Verifikasi & bukti.</h1>
             <div class="mt-3 flex items-center gap-2 text-sm text-stone-600 dark:text-zinc-400">
@@ -33,8 +33,12 @@
                 <span class="sr-only">Filter kelas</span>
                 <select name="class_name" class="field select-field min-h-11 w-full rounded-sm px-4 py-2.5 text-sm lg:min-w-[160px]">
                     <option value="">Semua Kelas</option>
-                    @foreach($classOptions as $c)
-                        <option value="{{ $c }}" {{ request('class_name') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                    @foreach(\App\Models\User::classGroups() as $group)
+                        <optgroup label="{{ $group['label'] }}">
+                            @foreach($group['classes'] as $c)
+                                <option value="{{ $c }}" {{ request('class_name') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                            @endforeach
+                        </optgroup>
                     @endforeach
                 </select>
             </label>
@@ -50,11 +54,11 @@
     <section class="anim-in mt-7 space-y-3" style="animation-delay: 80ms">
         @if($items->isEmpty())
             <div class="paper-sheet mx-auto max-w-xl rounded-sm px-8 py-16 text-center">
-                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-stone-300 text-stone-400 dark:border-zinc-700 dark:text-zinc-500">
+                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-stone-300 txt-muted dark:border-zinc-700">
                     <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <p class="font-display mt-5 text-2xl font-bold">Tidak ada catatan.</p>
-                <p class="mt-2 text-sm text-stone-500 dark:text-zinc-400">Tidak ada data pada tab & filter ini.</p>
+                <p class="mt-2 text-sm txt-label">Tidak ada data pada tab & filter ini.</p>
             </div>
         @else
             @foreach($items as $item)
@@ -67,7 +71,7 @@
                         <div class="flex min-w-0 flex-wrap items-center gap-2">
                             <span class="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#be1836] dark:text-rose-400">{{ $item->class_name }}</span>
                             <span class="text-stone-300 dark:text-zinc-700">/</span>
-                            <span class="truncate font-mono text-[9px] uppercase tracking-[.14em] text-stone-500 dark:text-zinc-400">{{ $item->subject }}</span>
+                            <span class="truncate font-mono text-[9px] uppercase tracking-[.14em] txt-label">{{ $item->subject }}</span>
                         </div>
                         <span class="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-sm border px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-wider {{ $isConfirmed ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400' }}">
                             {{ $isConfirmed ? 'Terverifikasi' : 'Pending' }}
@@ -75,12 +79,12 @@
                     </div>
 
                     <div class="py-3">
-                        <h3 class="font-display text-lg font-extrabold leading-tight tracking-tight {{ $isConfirmed ? 'line-through text-stone-400 dark:text-zinc-500' : '' }}">{{ $item->task_title }}</h3>
+                        <h3 class="font-display text-lg font-extrabold leading-tight tracking-tight {{ $isConfirmed ? 'line-through txt-muted' : '' }}">{{ $item->task_title }}</h3>
                         <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-600 dark:text-zinc-400">
                             <span class="flex items-center gap-1.5">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
                                 <span class="font-bold">{{ $item->user_name }}</span>
-                                <span class="font-mono text-[10px] text-stone-400">{{ $item->user_username }}</span>
+                                <span class="font-mono text-[10px] txt-muted">{{ $item->user_username }}</span>
                             </span>
                             <span class="flex items-center gap-1.5">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
@@ -101,7 +105,7 @@
                             @endforeach
                         </div>
                     @else
-                        <p class="mb-3 text-xs text-stone-400 dark:text-zinc-500">Tidak ada foto bukti.</p>
+                        <p class="mb-3 text-xs txt-muted">Tidak ada foto bukti.</p>
                     @endif
 
                     <div class="flex flex-wrap gap-2 border-t border-stone-200 pt-3 dark:border-white/10">
@@ -121,7 +125,7 @@
                                 <button type="submit" class="pressable inline-flex min-h-9 items-center gap-2 rounded-sm border border-amber-500/50 px-4 text-xs font-bold text-amber-600 hover:bg-amber-500/10 dark:text-amber-400">Batalkan</button>
                             </form>
                         @endif
-                        <span class="self-center font-mono text-[10px] text-stone-400">{{ $item->task_id !== null ? 'Deadline: '.\Carbon\Carbon::parse($item->deadline)->format('d M Y') : '' }}</span>
+                        <span class="self-center font-mono text-[10px] txt-muted">{{ $item->task_id !== null ? 'Deadline: '.\Carbon\Carbon::parse($item->deadline)->format('d M Y') : '' }}</span>
                     </div>
                 </article>
             @endforeach

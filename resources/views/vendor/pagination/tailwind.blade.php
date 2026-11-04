@@ -2,7 +2,7 @@
     <nav role="navigation" aria-label="Pagination" class="flex flex-wrap items-center justify-center gap-1.5">
         @if ($paginator->onFirstPage())
             <span aria-disabled="true" aria-label="Sebelumnya"
-                class="flex h-11 min-w-11 cursor-default items-center justify-center rounded-sm border border-stone-300 bg-[#eee5d6] px-3 font-mono text-xs text-stone-400 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-600">
+                class="flex h-11 min-w-11 cursor-default items-center justify-center rounded-sm border border-stone-300 bg-[#eee5d6] px-3 font-mono text-xs txt-muted dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-600">
                 &larr;
             </span>
         @else
@@ -14,7 +14,7 @@
 
         @foreach ($elements as $element)
             @if (is_string($element))
-                <span aria-hidden="true" class="flex h-11 min-w-8 items-center justify-center font-mono text-xs text-stone-400 dark:text-zinc-600">{{ $element }}</span>
+                <span aria-hidden="true" class="flex h-11 min-w-8 items-center justify-center font-mono text-xs txt-muted">{{ $element }}</span>
             @endif
 
             @if (is_array($element))
@@ -41,7 +41,7 @@
             </a>
         @else
             <span aria-disabled="true" aria-label="Berikutnya"
-                class="flex h-11 min-w-11 cursor-default items-center justify-center rounded-sm border border-stone-300 bg-[#eee5d6] px-3 font-mono text-xs text-stone-400 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-600">
+                class="flex h-11 min-w-11 cursor-default items-center justify-center rounded-sm border border-stone-300 bg-[#eee5d6] px-3 font-mono text-xs txt-muted dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-600">
                 &rarr;
             </span>
         @endif

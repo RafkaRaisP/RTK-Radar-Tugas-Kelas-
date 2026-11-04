@@ -17,7 +17,9 @@ Route::get('/radar', [TaskController::class, 'publicIndex'])->name('radar');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::get('/students/{nis}/check', [AuthController::class, 'checkNis'])
+    ->whereNumber('nis')->middleware('throttle:60,1')->name('students.check');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Auth: forgot & reset password (via email)
@@ -34,7 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
     Route::post('/tasks/{task}/complete', [TaskController::class, 'toggleComplete'])->name('tasks.complete');
     Route::post('/tasks/{task}/done', [TaskController::class, 'markAsDone'])->name('tasks.done');
-    Route::get('/tasks/export', [TaskController::class, 'exportCsv'])->name('tasks.export');
+    Route::get('/tasks/export', [TaskController::class, 'exportPdf'])->name('tasks.export');
 });
 
 // PJ Mapel routes
